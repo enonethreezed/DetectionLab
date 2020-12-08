@@ -12,12 +12,17 @@ reconfigure_locales() {
 
 upgrade_system(){
 	sudo apt update
-	sudo apt -y dist-upgrade 
+	sudo apt -y -o Dpkg::Options::="--force-confdef" \ 
+	-o Dpkg::Options::="--force-confold" dist-upgrade 
+	sudo apt -y dist-upgrade
+	sudo apt -y autoremove --purge
+	sudo apt remove --purge $(sudo dpkg -l | grep "^rc" | awk '{print $2}' | tr '\n' ' ')
+	sudo apt clean all
 }
 
 install_ssh() {
 	sudo apt-get install -y ssh
-	sudo systemctl start ssh.service
+	sudo systemctl start ssh.service --now
 }
 
 setupRDP(){
@@ -28,28 +33,16 @@ setupRDP(){
 	sudo ./xfce4.sh
 	sudo systemctl enable xrdp --now
 	echo "xfce4-session" > ~/.xsession
-	cat <<EOF > ~/.xsessionrc
-	export XDG_SESSION_DESKTOP=xubuntu
-	export XDG_DATA_DIRS=${D}
-	export XDG_CONFIG_DIRS=/etc/xdg/xdg-xubuntu:/etc/xdg:/etc/xdg
-	EOF
-	cat <<EOF | sudo tee /usr/bin/light-locker
-	#!/bin/sh
-	# The light-locker uses XDG_SESSION_PATH provided by lightdm.
-	if [ ! -z "\${XDG_SESSION_PATH}" ]; then
-  	/usr/bin/light-locker.orig
-	else
-  	# Disable light-locker in XRDP.
-  	true
-	fi
-	EOF
+	echo "export XDG_SESSION_DESKTOP=xubuntu" >> /home/vagrant/.xsessionrc 
+	echo "export XDG_DATA_DIRS=${D}" >> /home/vagrant/.xsessionrc
+	echo "export XDG_CONFIG_DIRS=/etc/xdg/xdg-xubuntu:/etc/xdg:/etc/xdg" >> /home/vagrant/.xsessionrc
 }
 
 main() {
 	reconfigure_locales
 	upgrade_system
 	install_ssh
-	setupRDP
+	# setupRDP
 }
 
 main
