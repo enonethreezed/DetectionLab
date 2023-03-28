@@ -626,10 +626,10 @@ main() {
   install_fleet_import_osquery_config
   install_velociraptor
   install_suricata
-  install_zeek
+  # install_zeek
   install_guacamole
   configure_splunk_inputs
-  postinstall_tasks
+  # postinstall_tasks
 }
 
 splunk_only() {
@@ -639,6 +639,11 @@ splunk_only() {
 
 velociraptor_only() {
   install_velociraptor
+}
+
+guacamole(){
+  install_guacamole
+  systemctl restart guacd
 }
 
 # Allow custom modes via CLI args
